@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Products — MegaMart</title>
+
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="script.js"></script>
+
+  <style>
+    body { background:#fafafa; }
+
+    .product-menu-page { padding: 40px 0 80px; }
+    .page-header { text-align: center; margin-bottom: 24px; }
+    .page-header h1 { font-size: 34px; margin-bottom: 6px; }
+
+    .category-menu {
+      display:flex;
+      gap:14px;
+      padding:12px;
+      background:white;
+      border-bottom:1px solid #eee;
+      justify-content:center;
+      position:sticky;
+      top:0;
+      z-index:20;
+    }
+    .category-menu button {
+      border:0;
+      background:#f3f3f3;
+      padding:10px 16px;
+      border-radius:8px;
+      cursor:pointer;
+      transition:.2s;
+      font-size:15px;
+    }
+    .category-menu button:hover { background:#e2edff; }
+
+    .search-wrap { display:flex; justify-content:center; margin-bottom:24px; position:relative; }
+    .search-input {
+      width:100%; max-width:640px;
+      display:flex; border:2px solid var(--primary-blue);
+      border-radius:8px; overflow:hidden;
+    }
+    .search-input input { flex:1; padding:12px; border:0; outline:none; }
+    .search-input button { background:var(--primary-blue); padding:0 20px; color:#fff; border:0; cursor:pointer; }
+
+    .suggestions { 
+      display:none; position:absolute; top:56px; width:100%; max-width:640px;
+      background:white; border:1px solid var(--border-gray);
+      border-radius:6px; z-index:999; box-shadow:0 8px 24px rgba(0,0,0,0.08);
+    }
+    .suggestions ul { list-style:none; margin:0; padding:0; }
+    .suggestions li { padding:10px 14px; cursor:pointer; }
+    .suggestions li:hover { background:#f0f7ff; }
+
+    .product-menu-grid {
+      display:grid; grid-template-columns:repeat(4,1fr);
+      gap:20px; max-width:1200px; margin:0 auto;
+    }
+    .btn { padding:9px 12px; border-radius:8px; cursor:pointer; border:0; }
+    .btn-primary { background:var(--primary-blue); color:white; }
+    .btn-outline { background:white; border:1px solid var(--border-gray); }
+
+    .menu-card { 
+      background:white; border:1px solid var(--border-gray);
+      padding:20px; border-radius:10px; cursor:pointer;
+      transition:.2s; text-align:center;
+    }
+    .menu-card img { width:100px; }
+    .menu-card:hover { transform:translateY(-6px); box-shadow:0 12px 26px rgba(0,0,0,0.06); }
+
+    .overlay {
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,0.5);
+      align-items:center; justify-content:center;
+      padding:20px; z-index:999;
+    }
+    .overlay.active { display:flex; }
+
+    .modal {
+      background:white; width:100%; max-width:900px;
+      border-radius:10px; overflow:hidden;
+      animation:fadeUp .25s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(20px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+
+    .modal-header {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:16px; border-bottom:1px solid #ddd;
+    }
+    .modal-body { padding:16px; max-height:70vh; overflow:auto; }
+
+    .prod-item {
+      display:flex; padding:12px; gap:10px;
+      margin-bottom:12px; border-radius:10px;
+      background:#fafafa; border:1px solid #eee;
+      cursor:pointer; transition:.2s;
+    }
+    .prod-item:hover { transform:translateY(-4px); box-shadow:0 12px 24px rgba(0,0,0,0.1); }
+    .prod-thumb { width:90px; background:white; border-radius:8px; padding:10px; }
+
+    .preview-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .preview-thumb { width:100%; background:white; border:1px solid #eee; padding:20px; border-radius:10px; }
+  </style>
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="container" style="display:flex;gap:20px;align-items:center;">
+      <div class="logo"><span class="logo-text">MegaMart</span></div>
+      <nav style="margin-left:auto;">
+        <a href="index.html">Home</a> &nbsp;|&nbsp;
+        <a href="products.html">Products</a> &nbsp;|&nbsp;
+        <a href="trackorder.html">Track Order</a> &nbsp;|&nbsp;
+        <a href="about.html">About</a>
+      </nav>
+    </div>
+  </header>
+
+  <nav class="category-menu">
+    <button data-cat="mobiles">Mobiles</button>
+    <button data-cat="electronics">Electronics</button>
+    <button data-cat="cosmetics">Cosmetics</button>
+    <button data-cat="furniture">Furniture</button>
+    <button data-cat="fruits">Fruits</button>
+    <button data-cat="decor">Decor</button>
+    <button data-cat="watches">Watches</button>
+  </nav>
+
+  <main class="product-menu-page">
+    <div class="container">
+
+      <div class="page-header">
+        <h1>Shop by Category</h1>
+        <p>Click a category to open its popup.</p>
+      </div>
+
+      <div class="search-wrap">
+        <div class="search-input">
+          <input id="globalSearch" placeholder="Search categories or products...">
+          <button id="searchBtn">Search</button>
+        </div>
+
+        <div class="suggestions" id="suggestionsBox">
+          <ul id="suggestionsList"></ul>
+        </div>
+      </div>
+
+      <div class="product-menu-grid" id="menuGrid"></div>
+
+    </div>
+  </main>
+
+  <div class="overlay" id="categoryOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h2 id="catTitle"></h2>
+          <p id="catSubtitle"></p>
+        </div>
+        <button class="btn-outline" id="closeCategory">Close</button>
+      </div>
+
+      <div class="modal-body">
+        <input id="modalSearch" placeholder="Search in category..." style="width:100%;padding:10px;margin-bottom:10px;">
+        <div id="productsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="previewOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="previewTitle"></h2>
+        <button class="btn-outline" id="closePreview">Close</button>
+      </div>
+
+      <div class="modal-body">
+        <div id="previewBody"></div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
